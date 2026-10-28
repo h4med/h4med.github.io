@@ -98,13 +98,19 @@ body.dimmed .bar,body.dimmed .key,body.dimmed .chip{filter:grayscale(1);opacity:
   .row{flex-direction:column;align-items:stretch;height:auto;gap:0;margin-bottom:calc(3.6 * var(--u))}
   .key{flex-direction:row;align-items:center;gap:.5em;max-width:100%}
   .key em{display:none}
-  .lane{height:calc(5 * var(--u))}
-  #strip{top:calc(74 * var(--u));font-size:13px}
-  .sline{font-size:13px;max-width:92vw}
+  /* flex:none is the critical fix: the desktop rule .lane{flex:1} overrides the lane's
+     height in the column layout, collapsing it to ~0px so the growing bar rises up
+     over the label text. flex:none keeps flex:1 away and the lane keeps its height. */
+  .lane{flex:none;height:calc(6 * var(--u))}
+  #strip{top:auto;bottom:calc(8 * var(--u));font-size:15px}
+  .sline{font-size:15px;max-width:94vw;line-height:1.55}
   #axis{display:none}
-  #cap{top:auto;bottom:calc(5.5 * var(--u));right:5vw;left:5vw;font-size:15px}
+  /* bottom band on phones: caption (highest), event labels, then the step counter.
+     The labels grow upward with up to 3 lines, so the bands must not touch. */
+  #cap{top:auto;bottom:calc(24 * var(--u));right:5vw;left:5vw;font-size:17px}
   #hint{display:none}
-  #pager{bottom:calc(2 * var(--u))}
+  #pager{bottom:calc(2.6 * var(--u));font-size:15px}
+  #home{top:calc(1.4 * var(--u));left:3vw;font-size:12px}
   #umb{padding-right:0}
   #umb{padding:calc(4 * var(--u)) 3vw;display:flex;flex-direction:column;justify-content:center}
   #umb b{margin-top:0}
