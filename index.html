@@ -23,6 +23,11 @@ body{background:var(--paper);color:var(--ink);font-family:Vz,Tahoma;overflow:hid
 .ov .lead{font-size:clamp(16px,1.85vw,26px);color:var(--ink);margin-top:calc(2.4 * var(--u));animation:pop .7s .2s}
 .ov .sub{font-size:clamp(12.5px,1.4vw,19px);color:var(--grey);margin-top:calc(2.2 * var(--u));max-width:70ch;animation:pop .7s .3s}
 .ov .meta{font-size:clamp(11.5px,1.15vw,16px);color:var(--grey);margin-top:calc(3.4 * var(--u));animation:pop .7s .55s}
+/* contact link on the closing page */
+#li{display:inline-flex;align-items:center;gap:.5em;margin-top:calc(4.2 * var(--u));padding:.6em 1.5em;
+  border-radius:999px;background:#0A66C2;color:#fff;text-decoration:none;font-weight:700;
+  font-size:clamp(13px,1.5vw,20px);animation:pop .7s .4s}
+#li:hover{background:#084f97}
 #hlist{list-style:none;display:flex;flex-direction:column;gap:calc(1.6 * var(--u));margin-top:calc(4 * var(--u))}
 .hitem{display:flex;align-items:center;gap:.7em;font-size:clamp(14px,1.9vw,24px);font-weight:700;
   animation:pop .7s .4s}
@@ -42,9 +47,12 @@ body{background:var(--paper);color:var(--ink);font-family:Vz,Tahoma;overflow:hid
 #pgpoints li::before{content:'•';position:absolute;right:0;color:var(--grey)}
 #pgrole{margin-top:calc(3.4 * var(--u));font-size:clamp(12.5px,1.4vw,18px);font-weight:700;text-align:center}
 
-/* ---- graph ---- */
-#graph{position:fixed;top:calc(14 * var(--u));right:6vw;left:6vw;height:calc(62 * var(--u))}
-.row{display:flex;align-items:center;height:calc(15 * var(--u));gap:4vw}
+/* ---- graph: tall lanes; each branch carries its own event chips above the bar.
+   The lane box includes room for up to three stacked chips over the bar.
+   NOTE: no vh units here — build rewrites every 'Nvh' into calc(N * var(--u)) and
+   --u is 1dvh where supported, so fixed chrome must use % of viewport height. ---- */
+#graph{position:fixed;top:12%;right:6vw;left:6vw;height:64%}
+.row{display:flex;align-items:stretch;height:25%;gap:4vw}
 .key{width:auto;max-width:34%;display:flex;flex-direction:column;align-items:flex-end;gap:.calc(3 * var(--u));line-height:1.3}
 /* labels hug the LEFT edge of the column; alignKeys() gives all four rows one width,
    so every bar starts at the same x and all four branches come out equal */
@@ -52,20 +60,22 @@ body{background:var(--paper);color:var(--ink);font-family:Vz,Tahoma;overflow:hid
 .key b{font-size:clamp(15px,1.7vw,23px);font-weight:700}
 .key em{font-size:clamp(10px,1.05vw,14px);color:var(--grey)}
 .dot{width:16px;height:16px;border-radius:50%;background:var(--k);position:relative;margin-top:2px}
-.lane{position:relative;flex:1;border-bottom:1px solid rgba(28,28,30,.10)}
+.lane{position:relative;flex:1;height:100%;border-bottom:1px solid rgba(28,28,30,.10)}
 .bar{position:absolute;bottom:0;right:0;left:0;height:5px;background:var(--k);
   border-radius:3px;transition:height .85s cubic-bezier(.35,.1,.9,.3)}
-.evs{position:absolute;inset:0}
+/* event chips live inside their own branch lane, pinned at the far (time) end */
+.evs{position:absolute;inset:0;pointer-events:none}
+.echip{position:absolute;left:0;display:flex;align-items:center;gap:.45em;width:max-content;max-width:76%;
+  padding:.3em .8em;border-radius:10px;background:rgba(253,252,251,.92);
+  box-shadow:0 1px 4px rgba(28,28,30,.08);
+  font-size:clamp(10.5px,1.1vw,15px);font-weight:700;line-height:1.35;color:var(--ink);
+  opacity:.34;transition:opacity .5s}
+.echip i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.echip.now{opacity:1}
 .row.act .lane::after{content:'';position:absolute;left:0;bottom:calc(var(--bh,4px) - 4px);
   width:11px;height:11px;border-radius:50%;background:var(--k)}
 .row.act .bar{box-shadow:0 0 0 4px rgba(28,28,30,.07)}
-#strip{position:fixed;right:6vw;left:6vw;top:calc(75 * var(--u));display:flex;flex-direction:column;gap:.calc(9 * var(--u));
-  align-items:center;text-align:center;opacity:0;transition:opacity .5s}
-#strip.in{opacity:1}
-.sline{display:inline-flex;align-items:center;gap:.7em;max-width:88vw;font-weight:700;
-  font-size:clamp(13px,1.5vw,21px);line-height:1.5}
-.sline .mark{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
-#axis{position:absolute;left:0;right:0;bottom:-calc(13 * var(--u));display:flex;align-items:center;gap:1.6vw;
+#axis{position:absolute;left:0;right:0;bottom:-calc(10 * var(--u));display:flex;align-items:center;gap:1.6vw;
   font-size:clamp(11px,1.1vw,15px);color:var(--grey)}
 #axis i{flex:1;height:1px;background:rgba(28,28,30,.22);position:relative}
 #axis i::after{content:'';position:absolute;left:0;top:-3.5px;border-top:4px solid transparent;
@@ -94,25 +104,32 @@ body.dimmed .bar,body.dimmed .key,body.dimmed .chip{filter:grayscale(1);opacity:
 #home.show{opacity:1;pointer-events:auto}
 #home:hover{border-color:rgba(28,28,30,.5)}
 @media (max-width:700px){
-  #graph{top:calc(9 * var(--u));height:calc(64 * var(--u))}
+  /* phone: the stacked deck scrolls; let the browser scroll back to the top */
+  html,body{overflow:auto}
+  #graph{top:calc(9 * var(--u));height:auto;position:static;margin-top:8%}
   .row{flex-direction:column;align-items:stretch;height:auto;gap:0;margin-bottom:calc(3.6 * var(--u))}
   .key{flex-direction:row;align-items:center;gap:.5em;max-width:100%}
   .key em{display:none}
   /* flex:none is the critical fix: the desktop rule .lane{flex:1} overrides the lane's
      height in the column layout, collapsing it to ~0px so the growing bar rises up
      over the label text. flex:none keeps flex:1 away and the lane keeps its height. */
-  .lane{flex:none;height:calc(6 * var(--u))}
-  #strip{top:auto;bottom:calc(8 * var(--u));font-size:15px}
-  .sline{font-size:15px;max-width:94vw;line-height:1.55}
-  #axis{display:none}
-  /* bottom band on phones: caption (highest), event labels, then the step counter.
-     The labels grow upward with up to 3 lines, so the bands must not touch. */
-  #cap{top:auto;bottom:calc(24 * var(--u));right:5vw;left:5vw;font-size:17px}
+  .lane{flex:none;height:auto;min-height:calc(2.6 * var(--u));border-bottom:none;overflow:hidden}
+  .bar{position:static;height:8px !important;border-radius:4px}
+  .evs{position:static;display:flex;flex-direction:column;align-items:flex-start;gap:.calc(7 * var(--u));padding-top:calc(1 * var(--u))}
+  .echip{position:static !important;bottom:auto !important;left:auto !important;width:auto;max-width:100%;font-size:13px;
+    background:rgba(28,28,30,.045);border-radius:10px;padding:.4em .8em}
+  .row.act .lane::after{display:none}
+  /* bottom band on phones: caption high enough to clear three stacked one-line chips */
+  #cap{top:calc(2 * var(--u));right:5vw;left:5vw;font-size:17px}
   #hint{display:none}
   #pager{bottom:calc(2.6 * var(--u));font-size:15px}
   #home{top:calc(1.4 * var(--u));left:3vw;font-size:12px}
   #umb{padding-right:0}
   #umb{padding:calc(4 * var(--u)) 3vw;display:flex;flex-direction:column;justify-content:center}
+  /* the desktop inset(-16px -8px ...) would stick out of the document and create a
+     horizontal scrollbar on phones — clamp it to the viewport */
+  #graph{clip-path:inset(0)}
+  #umb{inset:0}
   #umb b{margin-top:0}
   #umb span{margin-top:calc(2.4 * var(--u))}
   #combo b{left:auto;right:auto;width:max-content;max-width:60vw}
@@ -123,7 +140,7 @@ body.dimmed .bar,body.dimmed .key,body.dimmed .chip{filter:grayscale(1);opacity:
   .ov{display:none!important}
   #graph{position:static;height:auto}
 }
-</style></head><body><div id="bar"></div><button id="home" type="button" title="صفحه‌ی اول" aria-label="بازگشت به صفحه‌ی اول">⌂ صفحه‌ی اول</button><div id="hero" class="ov"><h1>حامد دونده</h1><p class="lead">مسیر حرفه‌ای: چهار شاخه زیر یک چتر</p><p class="sub">مروری بر مسیر حرفه‌ای: چهار شاخه‌ی موازی که در پایان زیر چتر مهندسی سیستم جمع شدند.</p><ul id="hlist"><li class="hitem"><i style="background:#3D6DA8"></i>الکترونیک<em>سخت‌افزار، Firmware، Embedded Linux</em></li><li class="hitem"><i style="background:#4F7E63"></i>اتوماسیون صنعتی<em>DCS، PLC، صنعت برق، پست و نیروگاه</em></li><li class="hitem"><i style="background:#7B5FA6"></i>هوش مصنوعی<em>از شبکه‌های عصبی تا LLM و Agent</em></li><li class="hitem"><i style="background:#2F8CAD"></i>نرم‌افزار<em>از وب تا معماری سیستم</em></li></ul><p class="meta">آخرین ویرایش: ۳ آبان ۱۴۰۵</p><p class="go">کلیک، اسپیس یا کلید ← برای شروع</p></div><div id="cap"></div><div id="graph"><div id="umb"><b>مهندسی سیستم</b><span>چتری که هر چهار شاخه را در بر می‌گیرد؛ از نیازمندی تا نگه‌داشت</span></div><div id="combo"><b>ترکیب شاخه‌ها</b></div><div class="row" data-r="0" style="--k:#3D6DA8"><div class="key"><i class="dot" style="background:#3D6DA8"></i><b>الکترونیک</b><em>سخت‌افزار، Firmware، Embedded Linux</em></div><div class="lane"><div class="bar" style="background:#3D6DA8"></div><div class="evs"></div></div></div><div class="row" data-r="1" style="--k:#4F7E63"><div class="key"><i class="dot" style="background:#4F7E63"></i><b>اتوماسیون صنعتی</b><em>DCS، PLC، صنعت برق، پست و نیروگاه</em></div><div class="lane"><div class="bar" style="background:#4F7E63"></div><div class="evs"></div></div></div><div class="row" data-r="2" style="--k:#7B5FA6"><div class="key"><i class="dot" style="background:#7B5FA6"></i><b>هوش مصنوعی</b><em>از شبکه‌های عصبی تا LLM و Agent</em></div><div class="lane"><div class="bar" style="background:#7B5FA6"></div><div class="evs"></div></div></div><div class="row" data-r="3" style="--k:#2F8CAD"><div class="key"><i class="dot" style="background:#2F8CAD"></i><b>نرم‌افزار</b><em>از وب تا معماری سیستم</em></div><div class="lane"><div class="bar" style="background:#2F8CAD"></div><div class="evs"></div></div></div><div id="axis"><span>از دانشگاه فردوسی</span><i></i><span>تا امروز</span></div></div><div id="strip"></div><div id="prod" class="ov"><h1 id="pgtitle"></h1><p class="ptag" id="pgtag"></p><div id="pgrecipe"></div><ul id="pgpoints"></ul><p id="pgrole"></p></div><div id="end" class="ov"><h1>پایان</h1><p>حامد دونده — مسیر حرفه‌ای: چهار شاخه زیر یک چتر</p><p class="meta">آخرین ویرایش: ۳ آبان ۱۴۰۵</p></div><div id="hint">کلیک، اسپیس یا کلید ← : بعدی &nbsp;·&nbsp; کلید → : قبلی &nbsp;·&nbsp; Home : صفحه‌ی اول &nbsp;·&nbsp; f : تمام‌صفحه</div><div id="pager"></div><script>var STEPS=[{"hero": true, "cap": "", "h": [0, 0, 0, 0], "grow": [], "ev": []}, {"cap": "چهار سطر، چهار شاخه؛ در هر گام یک شاخه قطورتر می‌شود", "h": [0, 0, 0, 0], "grow": [], "ev": []}, {"cap": "دانشگاه فردوسی مشهد", "h": [2.5, 0, 0, 0], "grow": [0], "ev": [[0, "لیسانس الکترونیک؛ تدریس و آزمایشگاه؛ R&D دانشگاه سجاد"]]}, {"cap": "شبکه‌های عصبی، از لیسانس تا ارشد", "h": [2.5, 0, 3.5, 0], "grow": [2], "ev": [[2, "درس شبکه‌های عصبی (۸۲-۸۳)؛ مقاله‌های GA؛ پایان‌نامه‌ی شبکه‌های عصبی جاذب"]]}, {"cap": "فاصله‌ی بین لیسانس و ارشد", "h": [2.5, 0, 3.5, 2], "grow": [3], "ev": [[3, "PHP و MySQL؛ اولین درآمد حرفه‌ای از طراحی وب (۵۰ هزار تومان)"]]}, {"cap": "طلیعه شرق | گروه مهام شرق", "h": [5, 0, 3.5, 2], "grow": [0], "ev": [[0, "سخت‌افزار و Firmware؛ مهندسی معکوس آلارم‌یونیت؛ طراحی PCB"]]}, {"cap": "طلیعه شرق: حضور در پست‌های انتقال", "h": [5, 2, 3.5, 2], "grow": [1], "ev": [[1, "چند پست انتقال؛ پست ۴۰۰ کیلوولت سهند تبریز برای رفع عیب آلارم‌یونیت‌ها"]]}, {"cap": "طلیعه شرق: ورود به اتوماسیون", "h": [5, 3.5, 3.5, 2], "grow": [1], "ev": [[1, "Remote-IO روی Modbus/TCP؛ وصل به iFIX؛ IEC 61850 و PROFIBUS"]]}, {"cap": "MAPCS", "h": [7, 3.5, 3.5, 2], "grow": [0], "ev": [[0, "Raspberry Pi؛ Embedded Linux؛ Modbus/TCP Gatewayها"]]}, {"cap": "MAPCS: عمق در اتوماسیون", "h": [7, 5.5, 3.5, 2], "grow": [1], "ev": [[1, "DCS؛ Codesys و توسعه‌ی Runtime؛ دوره‌ی PROFIBUS در دوبی"]]}, {"cap": "MAPCS: تجربه‌ی میدانی، نیروگاه حیدریه (نجف)", "h": [7, 7.5, 3.5, 2], "grow": [1], "ev": [[1, "نزدیک دو ماه، طی چند مرحله، در نیروگاه حیدریه (نجف)"]]}, {"cap": "MAPCS: نرم‌افزار و روش", "h": [7, 7.5, 3.5, 4.5], "grow": [3], "ev": [[3, "Scrum (اولین معرفی در مِکو)؛ Kanban؛ پیشنهاد وب و HTML5"]]}, {"cap": "محصول: ترکیب سه شاخه", "h": [9, 9, 3.5, 6.5], "grow": [0, 1, 3], "ev": [[0, "سخت‌افزار و Firmware SER و دیتادیود صنعتی"], [1, "کاربرد: اتوماسیون صنعتی؛ زمان‌گذاری ۱ میلی‌ثانیه در نیروگاه‌ها"], [3, "نرم‌افزار و وب‌اینترفیس (Flask)؛ گروه NPD"]], "combo": true}, {"cap": "محصول ۱ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "SER: سخت‌افزار و Firmware"], [3, "نرم‌افزار وب و پیکربندی"]], "pg": {"title": "SER", "tag": "ثبت‌کننده‌ی رخداد (Event Recorder) با دقت زمان‌گذاری ۱ میلی‌ثانیه", "points": ["محصولات MAPCS در حوزه‌ی DCS بود؛ به دلیل Time Cycle حداقل ۵۰ میلی‌ثانیه، برای تحلیل Trip کافی نبود", "محصولی ساختیم که با دقت ۱ میلی‌ثانیه زمان‌گذاری می‌کرد", "طراحی REST API برای ارتباط با سرورهای MAPCS", "تقریباً در همه‌ی نیروگاه‌های MAPCS ثابت شد و کامنت‌های زیادی از آن پروژه بسته شد"], "role": "سخت‌افزار و Firmware + کاربرد اتوماسیون صنعتی + نرم‌افزار وب و REST API"}}, {"cap": "محصول ۲ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "MRT: Raspberry Pi و Firmware"], [1, "جایگزین ارزان‌تر پردازنده‌ی DCS"]], "pg": {"title": "MRT | MAPCS RTU Technology", "tag": "RTU و SCADA روی Raspberry Pi Industrial Compute Modules، به‌جای پردازنده‌ی گران DCS", "points": ["پردازنده‌ی DCS موجود برای کار سیستم‌های RTU و SCADA خیلی گران تمام می‌شد؛ محصول ما هزینه را محسوس پایین آورد", "باعث شد شاخه‌ی جدید RTU و SCADA در MAPCS شکل بگیرد", "نرم‌افزار ویندوزبیس آن با پروتکل‌های متعدد SCADA کار می‌کرد؛ من هد هر دو بخش توسعه‌ی محصول و MRT بودم"], "role": "الکترونیک و Embedded Linux + اتوماسیون صنعتی و SCADA + نرم‌افزار ویندوزبیس"}}, {"cap": "محصول ۳ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "دیتادیود: سخت‌افزار و Firmware"], [1, "انتقال ایزوله در اتوماسیون"]], "pg": {"title": "دیتادیود صنعتی (Data Diode)", "tag": "انتقال Modbus به Modbus، اما ایزوله", "points": ["پیشنهاد اولیه‌اش از من بود و در قالب پروژه‌های R&D MAPCS ساخته و پشتیبانی شد", "داده از مرز شبکه‌ی ایزوله عبور می‌کند، بدون آنکه ایزولاسیون شکسته شود"], "role": "سخت‌افزار و Firmware + کاربرد اتوماسیون صنعتی + نرم‌افزار پیکربندی"}}, {"cap": "نگه‌داشت ارتباط با هوش مصنوعی", "h": [9, 9, 6.5, 6.5], "grow": [2], "ev": [[2, "دوره‌ی دکتر جفری هینتون؛ بازنگری Deep-Learning و CNN"]]}, {"cap": "حلقه‌ی گمشده: چرا مهندسی سیستم؟", "h": [9, 9, 6.5, 6.5], "grow": [], "ev": [], "think": true}, {"cap": "مهندسی سیستم، چتری روی هر چهار شاخه", "h": [9, 9, 6.5, 6.5], "grow": [], "ev": [], "umbrella": true}, {"cap": "گروه دیجیتال | سه سال آخر", "h": [9, 9, 9, 6.5], "grow": [2], "ev": [[2, "ابزارهای مبتنی بر LLM و Agentها؛ مسئول بخش هوش مصنوعی"]]}, {"cap": "گروه دیجیتال: ساختار و نرم‌افزار", "h": [9, 9, 9, 9], "grow": [3], "ev": [[3, "فرآیندسازی؛ Confluence از صفر؛ معماری Billing؛ بخش تست"]]}, {"end": true, "cap": "", "h": [9, 9, 9, 9], "grow": [], "ev": []}];var LANES=[{"key": "الکترونیک", "sub": "سخت‌افزار، Firmware، Embedded Linux", "color": "#3D6DA8"}, {"key": "اتوماسیون صنعتی", "sub": "DCS، PLC، صنعت برق، پست و نیروگاه", "color": "#4F7E63"}, {"key": "هوش مصنوعی", "sub": "از شبکه‌های عصبی تا LLM و Agent", "color": "#7B5FA6"}, {"key": "نرم‌افزار", "sub": "از وب تا معماری سیستم", "color": "#2F8CAD"}];</script><script>var N = STEPS.length, i = 0;
+</style></head><body><div id="bar"></div><button id="home" type="button" title="صفحه‌ی اول" aria-label="بازگشت به صفحه‌ی اول">⌂ صفحه‌ی اول</button><div id="hero" class="ov"><h1>حامد دونده</h1><p class="lead">مسیر حرفه‌ای: چهار شاخه زیر یک چتر</p><p class="sub">مروری بر مسیر حرفه‌ای: چهار شاخه‌ی موازی که در پایان زیر چتر مهندسی سیستم جمع شدند.</p><ul id="hlist"><li class="hitem"><i style="background:#3D6DA8"></i>الکترونیک<em>سخت‌افزار، Firmware، Embedded Linux</em></li><li class="hitem"><i style="background:#4F7E63"></i>اتوماسیون صنعتی<em>DCS، PLC، صنعت برق، پست و نیروگاه</em></li><li class="hitem"><i style="background:#7B5FA6"></i>هوش مصنوعی<em>از شبکه‌های عصبی تا LLM و Agent</em></li><li class="hitem"><i style="background:#2F8CAD"></i>نرم‌افزار<em>از وب تا معماری سیستم</em></li></ul><p class="meta">آخرین ویرایش: ۵ آبان ۱۴۰۵</p><p class="go">کلیک، اسپیس یا کلید ← برای شروع</p></div><div id="cap"></div><div id="graph"><div id="umb"><b>مهندسی سیستم</b><span>چتری که هر چهار شاخه را در بر می‌گیرد؛ از نیازمندی تا نگه‌داشت</span></div><div id="combo"><b>ترکیب شاخه‌ها</b></div><div class="row" data-r="0" style="--k:#3D6DA8"><div class="key"><i class="dot" style="background:#3D6DA8"></i><b>الکترونیک</b><em>سخت‌افزار، Firmware، Embedded Linux</em></div><div class="lane"><div class="bar" style="background:#3D6DA8"></div><div class="evs"></div></div></div><div class="row" data-r="1" style="--k:#4F7E63"><div class="key"><i class="dot" style="background:#4F7E63"></i><b>اتوماسیون صنعتی</b><em>DCS، PLC، صنعت برق، پست و نیروگاه</em></div><div class="lane"><div class="bar" style="background:#4F7E63"></div><div class="evs"></div></div></div><div class="row" data-r="2" style="--k:#7B5FA6"><div class="key"><i class="dot" style="background:#7B5FA6"></i><b>هوش مصنوعی</b><em>از شبکه‌های عصبی تا LLM و Agent</em></div><div class="lane"><div class="bar" style="background:#7B5FA6"></div><div class="evs"></div></div></div><div class="row" data-r="3" style="--k:#2F8CAD"><div class="key"><i class="dot" style="background:#2F8CAD"></i><b>نرم‌افزار</b><em>از وب تا معماری سیستم</em></div><div class="lane"><div class="bar" style="background:#2F8CAD"></div><div class="evs"></div></div></div><div id="axis"><span>از دانشگاه فردوسی</span><i></i><span>تا امروز</span></div></div><div id="prod" class="ov"><h1 id="pgtitle"></h1><p class="ptag" id="pgtag"></p><div id="pgrecipe"></div><ul id="pgpoints"></ul><p id="pgrole"></p></div><div id="end" class="ov"><h1>پایان</h1><p>حامد دونده — مسیر حرفه‌ای: چهار شاخه زیر یک چتر</p><a id="li" href="https://www.linkedin.com/in/hamed-davandeh/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg> لینکدین: hamed-davandeh</a><p class="meta">آخرین ویرایش: ۵ آبان ۱۴۰۵</p></div><div id="hint">کلیک، اسپیس یا کلید ← : بعدی &nbsp;·&nbsp; کلید → : قبلی &nbsp;·&nbsp; Home : صفحه‌ی اول &nbsp;·&nbsp; f : تمام‌صفحه</div><div id="pager"></div><script>var STEPS=[{"hero": true, "cap": "", "h": [0, 0, 0, 0], "grow": [], "ev": []}, {"cap": "چهار سطر، چهار شاخه؛ در هر گام یک شاخه قطورتر می‌شود", "h": [0, 0, 0, 0], "grow": [], "ev": []}, {"cap": "دانشگاه فردوسی مشهد", "h": [2.5, 0, 0, 0], "grow": [0], "ev": [[0, "لیسانس الکترونیک؛ تدریس و آزمایشگاه؛ R&D دانشگاه سجاد"]]}, {"cap": "شبکه‌های عصبی، از لیسانس تا ارشد", "h": [2.5, 0, 3.5, 0], "grow": [2], "ev": [[2, "درس شبکه‌های عصبی (۸۲-۸۳)؛ مقاله‌های GA؛ پایان‌نامه‌ی شبکه‌های عصبی جاذب"]]}, {"cap": "فاصله‌ی بین لیسانس و ارشد", "h": [2.5, 0, 3.5, 2], "grow": [3], "ev": [[3, "PHP و MySQL؛ اولین درآمد حرفه‌ای از طراحی وب (۵۰ هزار تومان)"]]}, {"cap": "طلیعه شرق | گروه مهام شرق", "h": [5, 0, 3.5, 2], "grow": [0], "ev": [[0, "سخت‌افزار و Firmware؛ مهندسی معکوس آلارم‌یونیت؛ طراحی PCB"]]}, {"cap": "طلیعه شرق: حضور در پست‌های انتقال", "h": [5, 2, 3.5, 2], "grow": [1], "ev": [[1, "چند پست انتقال؛ پست ۴۰۰ کیلوولت سهند تبریز برای رفع عیب آلارم‌یونیت‌ها"]]}, {"cap": "طلیعه شرق: ورود به اتوماسیون", "h": [5, 3.5, 3.5, 2], "grow": [1], "ev": [[1, "Remote-IO روی Modbus/TCP؛ وصل به iFIX؛ IEC 61850 و PROFIBUS"]]}, {"cap": "MAPCS", "h": [7, 3.5, 3.5, 2], "grow": [0], "ev": [[0, "Raspberry Pi؛ Embedded Linux؛ Modbus/TCP Gatewayها"]]}, {"cap": "MAPCS: عمق در اتوماسیون", "h": [7, 5.5, 3.5, 2], "grow": [1], "ev": [[1, "DCS؛ Codesys و توسعه‌ی Runtime؛ دوره‌ی PROFIBUS در دوبی"]]}, {"cap": "MAPCS: تجربه‌ی میدانی، نیروگاه حیدریه (نجف)", "h": [7, 7.5, 3.5, 2], "grow": [1], "ev": [[1, "نزدیک دو ماه، طی چند مرحله، در نیروگاه حیدریه (نجف)"]]}, {"cap": "MAPCS: نرم‌افزار و روش", "h": [7, 7.5, 3.5, 4.5], "grow": [3], "ev": [[3, "Scrum (اولین معرفی در مِکو)؛ Kanban؛ پیشنهاد وب و HTML5"]]}, {"cap": "محصول: ترکیب سه شاخه", "h": [9, 9, 3.5, 6.5], "grow": [0, 1, 3], "ev": [[0, "سخت‌افزار و Firmware SER و دیتادیود صنعتی"], [1, "کاربرد: اتوماسیون صنعتی؛ زمان‌گذاری ۱ میلی‌ثانیه در نیروگاه‌ها"], [3, "نرم‌افزار و وب‌اینترفیس (Flask)؛ گروه NPD"]], "combo": true}, {"cap": "محصول ۱ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "SER: سخت‌افزار و Firmware"], [3, "نرم‌افزار وب و پیکربندی"]], "pg": {"title": "SER", "tag": "ثبت‌کننده‌ی رخداد (Event Recorder) با دقت زمان‌گذاری ۱ میلی‌ثانیه", "points": ["محصولات MAPCS در حوزه‌ی DCS بود؛ به دلیل Time Cycle حداقل ۵۰ میلی‌ثانیه، برای تحلیل Trip کافی نبود", "محصولی ساختیم که با دقت ۱ میلی‌ثانیه زمان‌گذاری می‌کرد", "طراحی REST API برای ارتباط با سرورهای MAPCS", "تقریباً در همه‌ی نیروگاه‌های MAPCS ثابت شد و کامنت‌های زیادی از آن پروژه بسته شد"], "role": "سخت‌افزار و Firmware + کاربرد اتوماسیون صنعتی + نرم‌افزار وب و REST API"}}, {"cap": "محصول ۲ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "MRT: Raspberry Pi و Firmware"], [1, "جایگزین ارزان‌تر پردازنده‌ی DCS"]], "pg": {"title": "MRT | MAPCS RTU Technology", "tag": "RTU و SCADA روی Raspberry Pi Industrial Compute Modules، به‌جای پردازنده‌ی گران DCS", "points": ["پردازنده‌ی DCS موجود برای کار سیستم‌های RTU و SCADA خیلی گران تمام می‌شد؛ محصول ما هزینه را محسوس پایین آورد", "باعث شد شاخه‌ی جدید RTU و SCADA در MAPCS شکل بگیرد", "نرم‌افزار ویندوزبیس آن با پروتکل‌های متعدد SCADA کار می‌کرد؛ من هد هر دو بخش توسعه‌ی محصول و MRT بودم"], "role": "الکترونیک و Embedded Linux + اتوماسیون صنعتی و SCADA + نرم‌افزار ویندوزبیس"}}, {"cap": "محصول ۳ از ۳", "h": [9, 9, 3.5, 6.5], "grow": [], "ev": [[0, "دیتادیود: سخت‌افزار و Firmware"], [1, "انتقال ایزوله در اتوماسیون"]], "pg": {"title": "دیتادیود صنعتی (Data Diode)", "tag": "انتقال Modbus به Modbus، اما ایزوله", "points": ["پیشنهاد اولیه‌اش از من بود و در قالب پروژه‌های R&D MAPCS ساخته و پشتیبانی شد", "داده از مرز شبکه‌ی ایزوله عبور می‌کند، بدون آنکه ایزولاسیون شکسته شود"], "role": "سخت‌افزار و Firmware + کاربرد اتوماسیون صنعتی + نرم‌افزار پیکربندی"}}, {"cap": "نگه‌داشت ارتباط با هوش مصنوعی", "h": [9, 9, 6.5, 6.5], "grow": [2], "ev": [[2, "دوره‌ی دکتر جفری هینتون؛ بازنگری Deep-Learning و CNN"]]}, {"cap": "حلقه‌ی گمشده: چرا مهندسی سیستم؟", "h": [9, 9, 6.5, 6.5], "grow": [], "ev": [], "think": true}, {"cap": "مهندسی سیستم، چتری روی هر چهار شاخه", "h": [9, 9, 6.5, 6.5], "grow": [], "ev": [], "umbrella": true}, {"cap": "گروه دیجیتال | سه سال آخر", "h": [9, 9, 9, 6.5], "grow": [2], "ev": [[2, "ابزارهای مبتنی بر LLM و Agentها؛ مسئول بخش هوش مصنوعی"]]}, {"cap": "گروه دیجیتال: ساختار و نرم‌افزار", "h": [9, 9, 9, 9], "grow": [3], "ev": [[3, "فرآیندسازی؛ Confluence از صفر؛ معماری UNS؛ پیشنهاد ChirpStack؛ بخش تست"]]}, {"end": true, "cap": "", "h": [9, 9, 9, 9], "grow": [], "ev": []}];var LANES=[{"key": "الکترونیک", "sub": "سخت‌افزار، Firmware، Embedded Linux", "color": "#3D6DA8"}, {"key": "اتوماسیون صنعتی", "sub": "DCS، PLC، صنعت برق، پست و نیروگاه", "color": "#4F7E63"}, {"key": "هوش مصنوعی", "sub": "از شبکه‌های عصبی تا LLM و Agent", "color": "#7B5FA6"}, {"key": "نرم‌افزار", "sub": "از وب تا معماری سیستم", "color": "#2F8CAD"}];</script><script>var N = STEPS.length, i = 0;
 var rowEls = [], barEls = [], evEls = [];
 function fa(n){return String(n).replace(/[0-9]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});}
 function H(h){return Math.round(4 + h*3.4);}          /* 0 -> 4px, 9 -> 35px */
@@ -164,8 +181,10 @@ function show(k){
     rowEls[r].style.setProperty('--bh', h + 'px');
     rowEls[r].classList.toggle('act', st.grow.indexOf(r) > -1);
   }
-  /* labels: bottom strip, only this step's (previous ones removed) */
-  buildStrip(st);
+  /* descriptions: rendered INSIDE the branch they belong to (cumulative history) */
+  window._curK = k;
+  buildLanes(k);
+  if(window.matchMedia('(max-width:700px)').matches){ scrollToActive(st); }
   el('cap').textContent = st.cap || '';
   el('cap').style.opacity = st.cap ? '1' : '0';
   el('hero').classList.toggle('on', !!st.hero);
@@ -185,20 +204,67 @@ function show(k){
   }, 1100);
 }
 
-function buildStrip(st){
-  var s = el('strip');
-  s.classList.remove('in');
-  s.innerHTML = '';
-  if(!st.ev || !st.ev.length) return;
-  st.ev.forEach(function(e){
-    var line = document.createElement('span'); line.className = 'sline';
-    var m = document.createElement('i'); m.className = 'mark';
-    m.style.background = LANES[e[0]].color;
-    var b = document.createElement('b'); b.textContent = e[1];
-    line.appendChild(m); line.appendChild(b);
-    s.appendChild(line);
+/* Each lane shows ONLY the current step's event title(s) — no stacked history.
+   When a step has no event for a branch, that branch simply keeps its bar with no
+   title (clean), so titles never pile up on top of each other. */
+function buildLanes(k){
+  var st = STEPS[k];
+  for(var r=0;r<4;r++) evEls[r].innerHTML = '';
+  var ev = st.ev || [];
+  for(var e=0;e<ev.length;e++){
+    var lane = ev[e][0], host = evEls[lane];
+    if(!host) continue;
+    var chip = document.createElement('div');
+    chip.className = 'echip now';
+    var m = document.createElement('i'); m.style.background = LANES[lane].color;
+    var t = document.createElement('span'); t.textContent = ev[e][1];
+    chip.appendChild(m); chip.appendChild(t);
+    host.appendChild(chip);
+  }
+  stackChips();
+}
+
+/* Place chips bottom-up above their bar, anchored to the LANE BOTTOM (the bar line).
+   Runs after layout so heights are real. */
+function stackChips(){
+  requestAnimationFrame(function(){
+    for(var r=0;r<4;r++){
+      var host = evEls[r]; if(!host) continue;
+      var chips = host.children;
+      /* anchor to the TARGET bar height (final layout), not the mid-transition rendered
+         height, so chips never overlap a bar that is still growing under them */
+      var bh = H(STEPS[window._curK || 0].h[r]);
+      var y = bh + 12, j, c, hh;
+      for(j=chips.length-1;j>=0;j--){
+        c = chips[j];
+        if(c.style.display === 'none') continue;
+        hh = c.offsetHeight;
+        c.style.top = 'auto';
+        c.style.bottom = Math.round(y) + 'px';
+        y += hh + 8;
+      }
+    }
   });
-  setTimeout(function(){ s.classList.add('in'); }, 320);
+}
+
+/* Phone: the stacked branches scroll; bring the ACTIVE branch (or the first lane that
+   has a chip this step) into view under the fixed caption, so the current event never
+   hides behind it. */
+function scrollToActive(st){
+  requestAnimationFrame(function(){
+    var target = null;
+    if(st.grow && st.grow.length){ target = rowEls[st.grow[0]]; }
+    if(!target){
+      for(var r=0;r<4;r++){
+        if(st.ev && st.ev.some(function(e){ return e[0]===r; })){ target = rowEls[r]; break; }
+      }
+    }
+    if(!target) return;
+    var capEl = el('cap');
+    var capH = (parseFloat(window.getComputedStyle(capEl).bottom) || 0) + capEl.offsetHeight + 14;
+    var top = window.scrollY + target.getBoundingClientRect().top - capH;
+    window.scrollTo({top: Math.max(0, top), behavior: 'auto'});
+  });
 }
 
 /* Each product page: title, tagline, the three-branch recipe, points.
@@ -260,4 +326,5 @@ window.addEventListener('beforeprint', function(){ show(N-1); });
 
 var hsh = (location.hash||'').match(/s(\d+)/);
 init();
-show(hsh ? parseInt(hsh[1],10)-1 : 0);</script></body></html>
+show(hsh ? parseInt(hsh[1],10)-1 : 0);
+</script></body></html>
