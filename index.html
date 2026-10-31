@@ -111,7 +111,10 @@ body.dimmed .bar,body.dimmed .key,body.dimmed .chip{filter:grayscale(1);opacity:
   /* phones: caption starts at calc(8 * var(--u)) and can wrap to two lines (~calc(8 * var(--u)) tall), so branches
      start at calc(18 * var(--u)). The four rows then spread over the rest of the viewport, so the deck
      fills the screen instead of leaving a dead zone under the last branch. */
+  /* phones: #graph is static here, so left/right:6vw no longer applies — the horizontal
+     margin must be padding, otherwise bars and labels bleed into the screen edges */
   #graph{top:auto;height:auto;position:static;padding-top:calc(18 * var(--u));padding-bottom:calc(9 * var(--u));margin-top:0;
+    padding-left:5vw;padding-right:5vw;
     min-height:calc(100 * var(--u));display:flex;flex-direction:column;justify-content:space-between}
   .row{flex:1 1 auto;flex-direction:column;align-items:stretch;justify-content:center;gap:0;margin-bottom:0}
   .key{flex-direction:row;align-items:center;justify-content:flex-start;gap:.5em;max-width:100%}
